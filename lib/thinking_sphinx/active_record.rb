@@ -157,8 +157,8 @@ module ThinkingSphinx
           add_sphinx_index name, &block
         }
         
-        include ThinkingSphinx::ActiveRecord::Scopes
-        include ThinkingSphinx::SearchMethods
+        #include ThinkingSphinx::ActiveRecord::Scopes
+        #include ThinkingSphinx::SearchMethods
       end
       
       def define_indexes
@@ -304,11 +304,11 @@ module ThinkingSphinx
         unless indexed_by_sphinx?
           after_destroy :toggle_deleted
           
-          include ThinkingSphinx::ActiveRecord::AttributeUpdates
+          #include ThinkingSphinx::ActiveRecord::AttributeUpdates
         end
         
         if delta && !delta_indexed_by_sphinx?
-          include ThinkingSphinx::ActiveRecord::Delta
+          #include ThinkingSphinx::ActiveRecord::Delta
           
           before_save   :toggle_delta
           after_commit  :index_delta
