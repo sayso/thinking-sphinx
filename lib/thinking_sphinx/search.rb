@@ -746,7 +746,7 @@ module ThinkingSphinx
         :conditions => {klass.primary_key_for_sphinx.to_sym => ids},
         :include    => include_for_class(klass),
         :select     => (options[:select]  || index_options[:select]),
-        :order      => (options[:sql_order] || index_options[:sql_order])
+        :order      => (options[:sql_order] || index_options[:sql_order]) || "FIELD(id, #{ids.join(',')})"
       ) : []
 
       # Raise an exception if we find records in Sphinx but not in the DB, so
@@ -759,13 +759,7 @@ module ThinkingSphinx
 
       # if the user has specified an SQL order, return the collection
       # without rearranging it into the Sphinx order
-      return instances if (options[:sql_order] || index_options[:sql_order])
-
-      ids.collect { |obj_id|
-        instances.detect do |obj|
-          obj.primary_key_for_sphinx == obj_id
-        end
-      }
+      return instances
     end
     
     # Group results by class and call #find(:all) once for each group to reduce
