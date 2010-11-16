@@ -1,4 +1,5 @@
 require 'active_record'
+
 require 'after_commit'
 require 'yaml'
 require 'riddle'
@@ -114,9 +115,11 @@ module ThinkingSphinx
   #
   def self.deltas_enabled?
     if Thread.current[:thinking_sphinx_deltas_enabled].nil?
-      Thread.current[:thinking_sphinx_deltas_enabled] = (
-        ThinkingSphinx::Configuration.environment != "test"
-      )
+      #Thread.current[:thinking_sphinx_deltas_enabled] = (
+      #  ThinkingSphinx::Configuration.environment != "test"
+      #)
+      #
+      return true
     end
     
     Thread.current[:thinking_sphinx_deltas_enabled]
@@ -135,9 +138,10 @@ module ThinkingSphinx
   #
   def self.updates_enabled?
     if Thread.current[:thinking_sphinx_updates_enabled].nil?
-      Thread.current[:thinking_sphinx_updates_enabled] = (
-        ThinkingSphinx::Configuration.environment != "test"
-      )
+      #Thread.current[:thinking_sphinx_updates_enabled] = (
+      #  ThinkingSphinx::Configuration.environment != "test"
+      #)
+      return true
     end
     
     Thread.current[:thinking_sphinx_updates_enabled]
