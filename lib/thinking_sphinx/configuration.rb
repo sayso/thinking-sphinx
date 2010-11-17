@@ -68,7 +68,7 @@ module ThinkingSphinx
     attr_accessor :searchd_file_path, :allow_star, :database_yml_file,
       :app_root, :model_directories, :delayed_job_priority, :indexed_models
     
-    attr_accessor :source_options, :index_options
+    attr_accessor :source_options, :index_options, :section_options
     attr_accessor :version
     
     attr_reader :environment, :configuration, :controller
@@ -113,6 +113,7 @@ module ThinkingSphinx
       self.indexed_models       = []
       
       self.source_options  = {}
+      self.section_options  = {}
       self.index_options   = {
         :charset_type => "utf-8"
       }
@@ -152,7 +153,7 @@ module ThinkingSphinx
       ThinkingSphinx.context.indexed_models.each do |model|
         model = model.constantize
         model.define_indexes
-        @configuration.indexes.concat model.to_riddle
+        @configuration.indexes.concat merge_with_section_options!(model.to_riddle) 
       end
       
       open(file_path, "w") do |file|
@@ -268,12 +269,15 @@ module ThinkingSphinx
       
       conf.each do |key,value|
         self.send("#{key}=", value) if self.respond_to?("#{key}=")
-        
-        set_sphinx_setting self.source_options, key, value, SourceOptions
-        set_sphinx_setting self.index_options,  key, value, IndexOptions
-        set_sphinx_setting self.index_options,  key, value, CustomOptions
-        set_sphinx_setting @configuration.searchd, key, value
-        set_sphinx_setting @configuration.indexer, key, value
+        if value.is_a?(Hash)
+          self.section_options[key] = value
+        else
+          set_sphinx_setting self.source_options, key, value, SourceOptions
+          set_sphinx_setting self.index_options,  key, value, IndexOptions
+          set_sphinx_setting self.index_options,  key, value, CustomOptions
+          set_sphinx_setting @configuration.searchd, key, value
+          set_sphinx_setting @configuration.indexer, key, value
+        end
       end unless conf.nil?
       
       self.bin_path += '/' unless self.bin_path.blank?
@@ -283,7 +287,20 @@ module ThinkingSphinx
         self.index_options[:min_prefix_len] = 1
       end
     end
-    
+
+    def merge_with_section_options!(indexes)
+      indexes.each do |index|
+        if nested_values = section_options[index.name]
+          nested_values.each_pair {|key, val| index.send(:"#{key}=",val) }
+        end
+
+        if index.respond_to?(:sources)
+          merge_with_section_options!(index.sources)
+        end
+      end
+      indexes
+   end
+
     def set_sphinx_setting(object, key, value, allowed = {})
       if object.is_a?(Hash)
         object[key.to_sym] = value if allowed.include?(key.to_s)
