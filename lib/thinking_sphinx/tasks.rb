@@ -53,13 +53,17 @@ namespace :thinking_sphinx do
       config = ThinkingSphinx::Configuration.instance
       pid    = sphinx_pid
       config.controller.stop
-      
-      # Ensure searchd is stopped, but don't try too hard
-      Timeout.timeout(5) do
-        sleep(1) until config.controller.stop
+      begin
+        Timeout.timeout 5 do
+          while sphinx_running?
+            sleep 0.01
+          end
+        end
+      rescue Timeout::Error
+        puts "Could not stop sphinx (pid #{pid})!"
+      else
+        puts "Stopped search daemon (pid #{pid})."
       end
-      
-      puts "Stopped search daemon (pid #{pid})."
     end
   end
   
