@@ -56,7 +56,7 @@ namespace :thinking_sphinx do
       begin
         Timeout.timeout 5 do
           while sphinx_running?
-            sleep 0.01
+           sleep(0.5) until config.controller.stop
           end
         end
       rescue Timeout::Error
