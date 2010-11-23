@@ -56,12 +56,13 @@ namespace :thinking_sphinx do
       begin
         Timeout.timeout 5 do
           while sphinx_running?
-           sleep(0.5) until config.controller.stop
+           sleep(1) until config.controller.stop
           end
         end
       rescue Timeout::Error
-        puts "Could not stop sphinx (pid #{pid})!"
-      else
+        puts "sending KILL signal to pid #{pid}."
+        Process.kill("KILL", pid.to_i)
+      ensure
         puts "Stopped search daemon (pid #{pid})."
       end
     end
