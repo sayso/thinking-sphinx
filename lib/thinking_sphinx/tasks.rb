@@ -27,7 +27,7 @@ namespace :thinking_sphinx do
     config = ThinkingSphinx::Configuration.instance
 
     FileUtils.mkdir_p config.searchd_file_path
-    raise RuntimeError, "searchd is already running." if sphinx_running?
+    puts("searchd is already running.") and return if sphinx_running?
 
     Dir["#{config.searchd_file_path}/*.spl"].each { |file| File.delete(file) }
 
