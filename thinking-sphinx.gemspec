@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{thinking-sphinx}
+  s.name = %q{bartes-thinking-sphinx}
   s.version = "2.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Pat Allan"]
+  s.authors = ["Pat Allan, Jaroslaw Skrzypek, Bartosz Knapik"]
   s.date = %q{2011-01-24}
   s.description = %q{A concise and easy-to-use Ruby library that connects ActiveRecord to the Sphinx search daemon, managing configuration, indexing and searching.}
-  s.email = %q{pat@freelancing-gods.com}
+  s.email = %q{bartesrlz@gmail.com}
   s.extra_rdoc_files = [
     "README.textile"
   ]
@@ -67,7 +67,7 @@ Gem::Specification.new do |s|
     "tasks/distribution.rb",
     "tasks/testing.rb"
   ]
-  s.homepage = %q{http://ts.freelancing-gods.com}
+  s.homepage = %q{http://github.com/bartes/thinking-sphin}
   s.post_install_message = %q{If you're upgrading, you should read this:
 http://freelancing-god.github.com/ts/en/upgrading.html
 

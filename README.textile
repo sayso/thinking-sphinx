@@ -1,3 +1,44 @@
+h1. Slightly modified version of Thinking Sphinx
+
+h2. Performance improvements
+
+This version uses MySQL ORDER BY FIELD(id,..) instruction to sort results returned by sphinx without using Ruby. It also means
+
+h2. Removed automated includes
+
+I this version, all of your models which use TS must manually include ThinkingSphinx modules. Example:
+
+class Person
+
+  # Sphinx
+  include ThinkingSphinx::ActiveRecord::Scopes
+  include ThinkingSphinx::SearchMethods
+  include ThinkingSphinx::ActiveRecord::AttributeUpdates
+  include ThinkingSphinx::ActiveRecord::Delta
+  define_index do
+    ...
+  end
+
+  ...
+end
+
+Because of that, it is a lot easier to override default sphinx methods.
+
+h2. Default behaviour in tests
+
+One of the reason to create this fork is to ensure that Thinking Sphinx will behave in same way on both production and test en
+
+h2. Extended overrides in sphinx.yml
+
+In sphinx.yml you can use:
+
+development:
+  place_delta_0:
+    sql_query_pre: [ 'SET NAMES utf8' ]
+
+to add an option which is specific only to single section of sphinx configuration file.
+
+
 h1. Thinking Sphinx
 
 Please note: this is the branch for Rails 3. At some point in the near future, it will be released as Thinking Sphinx 2.0. It does not work with versions of Rails before v3 - I'm not sure if that'll happen in the future, but was just too much hassle right now.

@@ -32,7 +32,7 @@ require 'thinking_sphinx/railtie' if defined?(Rails)
 
 module ThinkingSphinx
   mattr_accessor :database_adapter
-  
+
   # A ConnectionError will get thrown when a connection to Sphinx can't be
   # made.
   class ConnectionError < StandardError
@@ -46,7 +46,7 @@ module ThinkingSphinx
       self.ids = ids
     end
   end
-  
+
   # A SphinxError occurs when Sphinx responds with an error due to problematic
   # queries or indexes.
   class SphinxError < RuntimeError
@@ -56,23 +56,23 @@ module ThinkingSphinx
       self.results = results
     end
   end
-  
+
   # The current version of Thinking Sphinx.
-  # 
+  #
   # @return [String] The version number as a string
-  # 
+  #
   def self.version
     open(File.join(File.dirname(__FILE__), '../VERSION')) { |f|
       f.read.strip
     }
   end
-  
+
   # The collection of indexed models. Keep in mind that Rails lazily loads
   # its classes, so this may not actually be populated with _all_ the models
   # that have Sphinx indexes.
   @@sphinx_mutex = Mutex.new
   @@context      = nil
-  
+
   def self.context
     if @@context.nil?
       @@sphinx_mutex.synchronize do
@@ -82,10 +82,10 @@ module ThinkingSphinx
         end
       end
     end
-    
+
     @@context
   end
-  
+
   def self.reset_context!
     @@sphinx_mutex.synchronize do
       @@context = nil
@@ -102,7 +102,7 @@ module ThinkingSphinx
     if Thread.current[:thinking_sphinx_define_indexes].nil?
       Thread.current[:thinking_sphinx_define_indexes] = true
     end
-    
+
     Thread.current[:thinking_sphinx_define_indexes]
   end
 
@@ -122,8 +122,9 @@ module ThinkingSphinx
         ThinkingSphinx::Configuration.environment != "test"
       )
     end
-    
+
     Thread.current[:thinking_sphinx_deltas_enabled]
+    true
   end
 
   # Enable/disable all delta indexing.
@@ -143,8 +144,9 @@ module ThinkingSphinx
         ThinkingSphinx::Configuration.environment != "test"
       )
     end
-    
+
     Thread.current[:thinking_sphinx_updates_enabled]
+    true
   end
 
   # Enable/disable updates to Sphinx
@@ -162,7 +164,7 @@ module ThinkingSphinx
   def self.suppress_delta_output=(value)
     Thread.current[:thinking_sphinx_suppress_delta_output] = value
   end
-  
+
   # Checks to see if MySQL will allow simplistic GROUP BY statements. If not,
   # or if not using MySQL, this will return false.
   #
@@ -174,7 +176,7 @@ module ThinkingSphinx
         ).all? { |key,value| value.nil? || value[/ONLY_FULL_GROUP_BY/].nil? }
       )
     end
-    
+
     Thread.current[:thinking_sphinx_use_group_by_shortcut]
   end
 
@@ -242,7 +244,7 @@ module ThinkingSphinx
       jruby? && ::ActiveRecord::Base.connection.config[:adapter] == "jdbcmysql"
     )
   end
-  
+
   extend ThinkingSphinx::SearchMethods::ClassMethods
 end
 

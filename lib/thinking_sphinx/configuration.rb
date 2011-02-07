@@ -53,7 +53,7 @@ module ThinkingSphinx
       mysql_ssl_ca sql_range_step sql_query_pre sql_query_post
       sql_query_killlist sql_ranged_throttle sql_query_post_index unpack_zlib
       unpack_mysqlcompress unpack_mysqlcompress_maxsize )
-    
+
     IndexOptions  = %w( blend_chars charset_table charset_type charset_dictpath
       docinfo enable_star exceptions expand_keywords hitless_words
       html_index_attrs html_remove_elements html_strip index_exact_words
@@ -62,13 +62,13 @@ module ThinkingSphinx
       min_stemming_len min_word_len mlock morphology ngram_chars ngram_len
       ondisk_dict overshort_step phrase_boundary phrase_boundary_step preopen
       stopwords stopwords_step wordforms )
-    
+
     CustomOptions = %w( disable_range )
 
     attr_accessor :searchd_file_path, :allow_star, :database_yml_file,
       :app_root, :model_directories, :delayed_job_priority, :indexed_models
-    
-    attr_accessor :source_options, :index_options
+
+    attr_accessor :source_options, :index_options, :section_options
     attr_accessor :version
 
     attr_reader :environment, :configuration, :controller
@@ -111,11 +111,12 @@ module ThinkingSphinx
         Dir.glob("#{app_root}/vendor/plugins/*/app/models/")
       self.delayed_job_priority = 0
       self.indexed_models       = []
-      
+
       self.source_options  = {}
       self.index_options   = {
         :charset_type => "utf-8"
       }
+      self.section_options  = {}
 
       self.version = nil
       parse_config
@@ -139,7 +140,7 @@ module ThinkingSphinx
     def environment
       self.class.environment
     end
-    
+
     def generate
       @configuration.indexes.clear
 
@@ -147,20 +148,20 @@ module ThinkingSphinx
         model = model.constantize
         model.define_indexes
         @configuration.indexes.concat model.to_riddle
-        
+
         enforce_common_attribute_types
       end
     end
-    
+
     # Generate the config file for Sphinx by using all the settings defined and
     # looping through all the models with indexes to build the relevant
     # indexer and searchd configuration, and sources and indexes details.
     #
     def build(file_path=nil)
       file_path ||= "#{self.config_file}"
-      
+
       generate
-      
+
       open(file_path, "w") do |file|
         file.write @configuration.render
       end
@@ -239,9 +240,9 @@ module ThinkingSphinx
     def indexer_binary_name=(name)
       @controller.indexer_binary_name = name
     end
-    
+
     attr_accessor :timeout
-    
+
     def client
       client = Riddle::Client.new address, port
       client.max_matches = configuration.searchd.max_matches || 1000
@@ -274,12 +275,15 @@ module ThinkingSphinx
 
       conf.each do |key,value|
         self.send("#{key}=", value) if self.respond_to?("#{key}=")
-
-        set_sphinx_setting self.source_options, key, value, SourceOptions
-        set_sphinx_setting self.index_options,  key, value, IndexOptions
-        set_sphinx_setting self.index_options,  key, value, CustomOptions
-        set_sphinx_setting @configuration.searchd, key, value
-        set_sphinx_setting @configuration.indexer, key, value
+        if value.is_a?(Hash)
+          self.section_options[key] = value
+        else
+          set_sphinx_setting self.source_options, key, value, SourceOptions
+          set_sphinx_setting self.index_options,  key, value, IndexOptions
+          set_sphinx_setting self.index_options,  key, value, CustomOptions
+          set_sphinx_setting @configuration.searchd, key, value
+          set_sphinx_setting @configuration.indexer, key, value
+        end
       end unless conf.nil?
 
       self.bin_path += '/' unless self.bin_path.blank?
@@ -290,6 +294,19 @@ module ThinkingSphinx
       end
     end
 
+    def merge_with_section_options!(indexes)
+      indexes.each do |index|
+        if nested_values = section_options[index.name]
+          nested_values.each_pair {|key, val| index.send(:"#{key}=",val) }
+        end
+
+        if index.respond_to?(:sources)
+          merge_with_section_options!(index.sources)
+        end
+      end
+      indexes
+   end
+
     def set_sphinx_setting(object, key, value, allowed = {})
       if object.is_a?(Hash)
         object[key.to_sym] = value if allowed.include?(key.to_s)
@@ -298,22 +315,22 @@ module ThinkingSphinx
         send("#{key}=", value) if self.respond_to?("#{key}")
       end
     end
-    
+
     def enforce_common_attribute_types
       sql_indexes = configuration.indexes.reject { |index|
         index.is_a? Riddle::Configuration::DistributedIndex
       }
-      
+
       return unless sql_indexes.any? { |index|
         index.sources.any? { |source|
           source.sql_attr_bigint.include? :sphinx_internal_id
         }
       }
-      
+
       sql_indexes.each { |index|
         index.sources.each { |source|
           next if source.sql_attr_bigint.include? :sphinx_internal_id
-          
+
           source.sql_attr_bigint << :sphinx_internal_id
           source.sql_attr_uint.delete :sphinx_internal_id
         }
