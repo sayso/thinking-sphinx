@@ -42,6 +42,7 @@ end
 
 class Person < ActiveRecord::Base
   belongs_to :team, :polymorphic => :true
+  belongs_to :source, :polymorphic => :true
   has_many :contacts
   
   has_many :friendships
@@ -147,4 +148,10 @@ end
 
 class Search < ActiveRecord::Base
   #
+end
+
+class BigFoo < ActiveRecord::Base
+  define_index do
+    indexes name
+  end
 end

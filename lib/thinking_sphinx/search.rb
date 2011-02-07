@@ -29,32 +29,32 @@ module ThinkingSphinx
     
     # Deprecated. Use ThinkingSphinx.search
     def self.search(*args)
-      log 'ThinkingSphinx::Search.search is deprecated. Please use ThinkingSphinx.search instead.'
-      ThinkingSphinx.search *args
+      warn 'ThinkingSphinx::Search.search is deprecated. Please use ThinkingSphinx.search instead.'
+      ThinkingSphinx.search(*args)
     end
     
     # Deprecated. Use ThinkingSphinx.search_for_ids
     def self.search_for_ids(*args)
-      log 'ThinkingSphinx::Search.search_for_ids is deprecated. Please use ThinkingSphinx.search_for_ids instead.'
-      ThinkingSphinx.search_for_ids *args
+      warn 'ThinkingSphinx::Search.search_for_ids is deprecated. Please use ThinkingSphinx.search_for_ids instead.'
+      ThinkingSphinx.search_for_ids(*args)
     end
     
     # Deprecated. Use ThinkingSphinx.search_for_ids
     def self.search_for_id(*args)
-      log 'ThinkingSphinx::Search.search_for_id is deprecated. Please use ThinkingSphinx.search_for_id instead.'
-      ThinkingSphinx.search_for_id *args
+      warn 'ThinkingSphinx::Search.search_for_id is deprecated. Please use ThinkingSphinx.search_for_id instead.'
+      ThinkingSphinx.search_for_id(*args)
     end
     
     # Deprecated. Use ThinkingSphinx.count
     def self.count(*args)
-      log 'ThinkingSphinx::Search.count is deprecated. Please use ThinkingSphinx.count instead.'
-      ThinkingSphinx.count *args
+      warn 'ThinkingSphinx::Search.count is deprecated. Please use ThinkingSphinx.count instead.'
+      ThinkingSphinx.count(*args)
     end
     
     # Deprecated. Use ThinkingSphinx.facets
     def self.facets(*args)
-      log 'ThinkingSphinx::Search.facets is deprecated. Please use ThinkingSphinx.facets instead.'
-      ThinkingSphinx.facets *args
+      warn 'ThinkingSphinx::Search.facets is deprecated. Please use ThinkingSphinx.facets instead.'
+      ThinkingSphinx.facets(*args)
     end
     
     def self.bundle_searches(enum = nil)
@@ -109,6 +109,40 @@ module ThinkingSphinx
     # 
     def populated?
       !!@populated
+    end
+    
+    # Indication of whether the request resulted in an error from Sphinx.
+    # 
+    # @return [Boolean] true if Sphinx reports query error
+    # 
+    def error?
+      !!error
+    end
+    
+    # The Sphinx-reported error, if any.
+    # 
+    # @return [String, nil]
+    # 
+    def error
+      populate
+      @results[:error]
+    end
+    
+    # Indication of whether the request resulted in a warning from Sphinx.
+    # 
+    # @return [Boolean] true if Sphinx reports query warning
+    # 
+    def warning?
+      !!warning
+    end
+    
+    # The Sphinx-reported warning, if any.
+    # 
+    # @return [String, nil]
+    # 
+    def warning
+      populate
+      @results[:warning]
     end
     
     # The query result hash from Riddle.
@@ -300,7 +334,7 @@ module ThinkingSphinx
       merge_search self, args, options
       args << options
       
-      ThinkingSphinx::FacetSearch.new *args
+      ThinkingSphinx::FacetSearch.new(*args)
     end
     
     def client
@@ -320,16 +354,7 @@ module ThinkingSphinx
       @populated = true
       @results   = results
       
-      if options[:ids_only]
-        replace @results[:matches].collect { |match|
-          match[:attributes]["sphinx_internal_id"]
-        }
-      else
-        replace instances_from_matches
-        add_excerpter
-        add_sphinx_attributes
-        add_matching_fields if client.rank_mode == :fieldmask
-      end
+      compose_results
     end
     
     private
@@ -350,22 +375,55 @@ module ThinkingSphinx
           }
           log "Found #{@results[:total_found]} results", :debug,
             "Sphinx (#{sprintf("%f", runtime)}s)"
+          
+          log "Sphinx Daemon returned warning: #{warning}", :error if warning?
+          
+          if error?
+            log "Sphinx Daemon returned error: #{error}", :error
+            raise SphinxError.new(error, @results) unless options[:ignore_errors]
+          end
         rescue Errno::ECONNREFUSED => err
           raise ThinkingSphinx::ConnectionError,
             'Connection to Sphinx Daemon (searchd) failed.'
         end
-      
-        if options[:ids_only]
-          replace @results[:matches].collect { |match|
-            match[:attributes]["sphinx_internal_id"]
-          }
-        else
-          replace instances_from_matches
-          add_excerpter
-          add_sphinx_attributes
-          add_matching_fields if client.rank_mode == :fieldmask
-        end
+        
+        compose_results
       end
+    end
+
+    def compose_results
+      if options[:ids_only]
+        compose_ids_results
+      elsif options[:only]
+        compose_only_results
+      else
+        replace instances_from_matches
+        add_excerpter
+        add_sphinx_attributes
+        add_matching_fields if client.rank_mode == :fieldmask
+      end
+    end
+    
+    def compose_ids_results
+      replace @results[:matches].collect { |match|
+        match[:attributes]['sphinx_internal_id']
+      }
+    end
+    
+    def compose_only_results
+      replace @results[:matches].collect { |match|
+        case only = options[:only]
+        when String, Symbol
+          match[:attributes][only.to_s]
+        when Array
+          only.inject({}) do |hash, attribute|
+            hash[attribute.to_sym] = match[:attributes][attribute.to_s]
+            hash
+          end
+        else
+          raise "Unexpected object for :only argument. String or Array is expected, #{only.class} was received."
+        end
+      }
     end
     
     def add_excerpter
@@ -427,8 +485,10 @@ module ThinkingSphinx
     end
     
     def prepare(client)
-      index_options = one_class ?
-        one_class.sphinx_indexes.first.local_options : {}
+      index_options = {}
+      if one_class && one_class.sphinx_indexes && one_class.sphinx_indexes.first
+        index_options = one_class.sphinx_indexes.first.local_options
+      end
       
       [
         :max_matches, :group_by, :group_function, :group_clause,
@@ -501,12 +561,7 @@ module ThinkingSphinx
     def conditions_as_query
       return '' if @options[:conditions].blank?
       
-      # Soon to be deprecated.
-      keys = @options[:conditions].keys.reject { |key|
-        attributes.include?(key.to_sym)
-      }
-      
-      ' ' + keys.collect { |key|
+      ' ' + @options[:conditions].keys.collect { |key|
         "@#{key} #{options[:conditions][key]}"
       }.join(' ')
     end
@@ -561,7 +616,7 @@ module ThinkingSphinx
     def sort_by
       case @sort_by = (options[:sort_by] || options[:order])
       when String
-        sorted_fields_to_attributes(@sort_by)
+        sorted_fields_to_attributes(@sort_by.clone)
       when Symbol
         field_names.include?(@sort_by) ?
           @sort_by.to_s.concat('_sort') : @sort_by.to_s
@@ -859,7 +914,7 @@ module ThinkingSphinx
     end
     
     def scoped_count
-      return self.total_entries if @options[:ids_only]
+      return self.total_entries if(@options[:ids_only] || @options[:only])
       
       @options[:ids_only] = true
       results_count = self.total_entries

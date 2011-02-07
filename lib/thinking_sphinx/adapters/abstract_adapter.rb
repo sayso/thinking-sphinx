@@ -16,6 +16,8 @@ module ThinkingSphinx
         ThinkingSphinx::MysqlAdapter.new model
       when :postgresql
         ThinkingSphinx::PostgreSQLAdapter.new model
+      when Class
+        adapter.new model
       else
         raise "Invalid Database Adapter: Sphinx only supports MySQL and PostgreSQL, not #{adapter}"
       end
@@ -67,6 +69,13 @@ module ThinkingSphinx
     
     def downcase(clause)
       "LOWER(#{clause})"
+    end
+    
+    def case(expression, pairs, default)
+      "CASE #{expression} " +
+      pairs.keys.inject('') { |string, key|
+        string + "WHEN '#{key}' THEN #{pairs[key]} "
+      } + "ELSE #{default} END"
     end
     
     protected

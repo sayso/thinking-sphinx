@@ -1,6 +1,7 @@
 require 'thinking_sphinx/active_record/attribute_updates'
 require 'thinking_sphinx/active_record/delta'
 require 'thinking_sphinx/active_record/has_many_association'
+require 'thinking_sphinx/active_record/has_many_association_with_scopes'
 require 'thinking_sphinx/active_record/scopes'
 
 module ThinkingSphinx
@@ -45,8 +46,7 @@ module ThinkingSphinx
           end
           
           def sphinx_database_adapter
-            @sphinx_database_adapter ||=
-              ThinkingSphinx::AbstractAdapter.detect(self)
+            ThinkingSphinx::AbstractAdapter.detect(self)
           end
           
           def sphinx_name
@@ -258,6 +258,8 @@ module ThinkingSphinx
         ThinkingSphinx::Configuration.instance.client.update(
           index, ['sphinx_deleted'], {document_id => [1]}
         )
+      rescue Riddle::ConnectionError, ThinkingSphinx::SphinxError
+        # Not the end of the world if Sphinx isn't running.
       end
       
       def sphinx_offset
