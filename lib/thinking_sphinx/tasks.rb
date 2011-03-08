@@ -48,7 +48,6 @@ namespace :thinking_sphinx do
       config = ThinkingSphinx::Configuration.instance
       pid    = sphinx_pid
       config.controller.stop
-
       begin
         # Ensure searchd is stopped, but don't try too hard
         Timeout.timeout(5) do

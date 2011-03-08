@@ -113,11 +113,11 @@ module ThinkingSphinx
       self.indexed_models       = []
 
       self.source_options  = {}
+      self.section_options  = {}
       self.index_options   = {
         :charset_type => "utf-8"
       }
       self.section_options  = {}
-
       self.version = nil
       parse_config
       self.version ||= @controller.sphinx_version
@@ -147,8 +147,7 @@ module ThinkingSphinx
       ThinkingSphinx.context.indexed_models.each do |model|
         model = model.constantize
         model.define_indexes
-        @configuration.indexes.concat model.to_riddle
-
+        @configuration.indexes.concat merge_with_section_options!(model.to_riddle)
         enforce_common_attribute_types
       end
     end

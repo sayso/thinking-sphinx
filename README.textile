@@ -2,7 +2,7 @@ h1. Slightly modified version of Thinking Sphinx
 
 h2. Performance improvements
 
-This version uses MySQL ORDER BY FIELD(id,..) instruction to sort results returned by sphinx without using Ruby. It also means
+This version uses MySQL ORDER BY FIELD(id,..) instruction to sort results returned by sphinx without using Ruby. It also means, that it will be incompatible with DBMS not supporting FIELD function.
 
 h2. Removed automated includes
 
@@ -26,7 +26,7 @@ Because of that, it is a lot easier to override default sphinx methods.
 
 h2. Default behaviour in tests
 
-One of the reason to create this fork is to ensure that Thinking Sphinx will behave in same way on both production and test en
+One of the reason to create this fork is to ensure that Thinking Sphinx will behave in same way on both production and test enviroment.
 
 h2. Extended overrides in sphinx.yml
 

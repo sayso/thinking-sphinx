@@ -830,8 +830,7 @@ module ThinkingSphinx
         :conditions => {klass.primary_key_for_sphinx.to_sym => ids},
         :include    => include_for_class(klass),
         :select     => (options[:select]  || index_options[:select]),
-        :order      => (options[:sql_order] || index_options[:sql_order]  || "FIELD(id, #{ids.join(',')})" )
-
+        :order      => (options[:sql_order] || index_options[:sql_order]) || "FIELD(id, #{ids.join(',')})"
       ) : []
 
       # Raise an exception if we find records in Sphinx but not in the DB, so
