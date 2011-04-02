@@ -201,9 +201,6 @@ module ThinkingSphinx
     def current_page
       @options[:page].blank? ? 1 : @options[:page].to_i
     end
-<<<<<<< HEAD
-
-=======
 
     # Kaminari support
     def page(page_number)
@@ -211,7 +208,6 @@ module ThinkingSphinx
       self
     end
 
->>>>>>> rails3_source
     # The next page number of the result set. If there are no more pages
     # available, nil is returned.
     #
