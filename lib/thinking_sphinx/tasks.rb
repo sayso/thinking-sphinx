@@ -31,7 +31,10 @@ namespace :thinking_sphinx do
 
     Dir["#{config.searchd_file_path}/*.spl"].each { |file| File.delete(file) }
 
+    old_env_tz = ENV['TZ']
+    ENV['TZ'] = nil
     config.controller.start
+    ENV['TZ'] = old_env_tz
 
     if sphinx_running?
       puts "Started successfully (pid #{sphinx_pid})."
