@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{thinking-sphinx}
-  s.version = "2.0.2"
+  s.version = "2.0.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Pat Allan, Jaroslaw Skrzypek, Bartosz Knapik"]
-  s.date = %q{2011-01-29}
+  s.date = %q{2011-04-03}
   s.description = %q{A concise and easy-to-use Ruby library that connects ActiveRecord to the Sphinx search daemon, managing configuration, indexing and searching.}
   s.email = %q{bartesrlz@gmail.com}
   s.extra_rdoc_files = [
