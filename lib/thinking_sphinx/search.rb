@@ -7,12 +7,12 @@ module ThinkingSphinx
   # search_for_ids methods will do the job in exactly the same manner when
   # called from a model.
   #
-  class Search
+  class Search < Array
     CoreMethods = %w( == class class_eval extend frozen? id instance_eval
       instance_of? instance_values instance_variable_defined?
       instance_variable_get instance_variable_set instance_variables is_a?
-      kind_of? member? method methods nil? object_id respond_to? send should
-      type )
+      kind_of? member? method methods nil? object_id respond_to?
+      respond_to_missing? send should type )
     SafeMethods = %w( partition private_methods protected_methods
       public_methods send class )
 
