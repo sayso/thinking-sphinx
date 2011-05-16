@@ -57,7 +57,7 @@ namespace :thinking_sphinx do
         # Ensure searchd is stopped, but don't try too hard
         Timeout.timeout(5) do
           while sphinx_running?
-            sleep(1) until config.controller.stop
+            sleep(0.01)
           end
         end
       rescue Timeout::Error
