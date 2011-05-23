@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{thinking-sphinx}
-  s.version = "2.0.3"
+  s.name = %q{sayso-thinking-sphinx}
+  s.version = "2.0.3.001"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Pat Allan, Jaroslaw Skrzypek, Bartosz Knapik"]
+  s.authors = ["SaySo"]
   s.date = %q{2011-05-09}
-  s.description = %q{A concise and easy-to-use Ruby library that connects ActiveRecord to the Sphinx search daemon, managing configuration, indexing and searching.}
-  s.email = %q{bartesrlz@gmail.com}
+  s.description = %q{A concise and easy-to-use Ruby library that connects ActiveRecord to the Sphinx search daemon, managing configuration, indexing and searching - forked and gemified for sayso}
+  s.email = %q{sayso@truvolabs.com}
   s.extra_rdoc_files = [
     "README.textile"
   ]
@@ -66,14 +66,14 @@ Gem::Specification.new do |s|
     "tasks/distribution.rb",
     "tasks/testing.rb"
   ]
-  s.homepage = %q{http://github.com/bartes/thinking-sphin}
+  s.homepage = %q{http://github.com/sayso/thinking-sphinx}
   s.post_install_message = %q{If you're upgrading, you should read this:
 http://freelancing-god.github.com/ts/en/upgrading.html
 
 }
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.6.2}
-  s.summary = %q{ActiveRecord/Rails Sphinx library}
+  s.summary = %q{ActiveRecord/Rails Sphinx library - forked and gemified for sayso}
   s.test_files = [
     "features/abstract_inheritance.feature",
     "features/alternate_primary_key.feature",
