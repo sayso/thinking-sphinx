@@ -57,7 +57,7 @@ namespace :thinking_sphinx do
         # Ensure searchd is stopped, but don't try too hard
         Timeout.timeout(5) do
           while sphinx_running?
-            sleep(0.01)
+            sleep(1) # using sleep(0.01) introduces a really strange bug, where Timeout::Error is not launched, on ruby-1.9.2-p180
           end
         end
       rescue Timeout::Error
